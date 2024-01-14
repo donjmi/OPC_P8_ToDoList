@@ -31,8 +31,6 @@ framework:
     fragments:       ~
     http_method_override: true
     assets: ~
-    kernel:
-        project_dir: '%kernel.project_dir%'
 # Twig Configuration
 twig:
     debug:            "%kernel.debug%"
