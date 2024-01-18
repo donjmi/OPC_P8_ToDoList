@@ -4,9 +4,11 @@ namespace AppBundle\Controller;
 
 use AppBundle\Entity\User;
 use AppBundle\Form\UserType;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use AppBundle\Form\UserAdminType;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class UserController extends Controller
 {
@@ -45,11 +47,18 @@ class UserController extends Controller
     }
 
     /**
-     * @Route("/users/{id}/edit", name="user_edit")
-     */
+    * @Route("/users/{id}/edit", name="user_edit")
+    */
     public function editAction(User $user, Request $request)
     {
-        $form = $this->createForm(UserType::class, $user);
+        // Vérifier si l'utilisateur connecté a le rôle "ROLE_ADMIN"
+        $authorizationChecker = $this->get('security.authorization_checker');
+
+        if ($authorizationChecker->isGranted('ROLE_ADMIN')) {
+            $form = $this->createForm(UserAdminType::class, $user);
+        } else {
+            $form = $this->createForm(UserType::class, $user);
+        }
 
         $form->handleRequest($request);
 
