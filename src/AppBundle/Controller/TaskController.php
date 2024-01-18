@@ -19,6 +19,14 @@ class TaskController extends Controller
     }
 
     /**
+     * @Route("/tasksTab", name="task_tab")
+     */
+    public function tabAction()
+    {
+        return $this->render('task/tab.html.twig', ['tasks' => $this->getDoctrine()->getRepository('AppBundle:Task')->findAll()]);
+    }
+
+    /**
      * @Route("/tasks/create", name="task_create")
      */
     public function createAction(Request $request)
@@ -30,6 +38,9 @@ class TaskController extends Controller
 
         if ($form->isValid()) {
             $em = $this->getDoctrine()->getManager();
+
+            //add user create
+            $task->setUser($this->getUser());
 
             $em->persist($task);
             $em->flush();
