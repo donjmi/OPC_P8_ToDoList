@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
 class UserController extends Controller
 {
@@ -17,6 +18,7 @@ class UserController extends Controller
      */
     public function listAction()
     {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
         return $this->render('user/list.html.twig', ['users' => $this->getDoctrine()->getRepository('AppBundle:User')->findAll()]);
     }
 
@@ -26,7 +28,15 @@ class UserController extends Controller
     public function createAction(Request $request)
     {
         $user = new User();
-        $form = $this->createForm(UserType::class, $user);
+        // Vérifier si l'utilisateur connecté a le rôle "ROLE_ADMIN"
+        $authorizationChecker = $this->get('security.authorization_checker');
+
+        if ($authorizationChecker->isGranted('ROLE_ADMIN')) {
+            $form = $this->createForm(UserAdminType::class, $user);
+        } else {
+            $form = $this->createForm(UserType::class, $user);
+        }
+
 
         $form->handleRequest($request);
 
@@ -51,6 +61,7 @@ class UserController extends Controller
     */
     public function editAction(User $user, Request $request)
     {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
         // Vérifier si l'utilisateur connecté a le rôle "ROLE_ADMIN"
         $authorizationChecker = $this->get('security.authorization_checker');
 
