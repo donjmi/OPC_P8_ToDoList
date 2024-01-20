@@ -28,15 +28,15 @@ class UserController extends Controller
     public function createAction(Request $request)
     {
         $user = new User();
-        // Vérifier si l'utilisateur connecté a le rôle "ROLE_ADMIN"
-        $authorizationChecker = $this->get('security.authorization_checker');
+        // // Vérifier si l'utilisateur connecté a le rôle "ROLE_ADMIN"
+        // $authorizationChecker = $this->get('security.authorization_checker');
 
-        if ($authorizationChecker->isGranted('ROLE_ADMIN')) {
-            $form = $this->createForm(UserAdminType::class, $user);
-        } else {
-            $form = $this->createForm(UserType::class, $user);
-        }
-
+        // if ($authorizationChecker->isGranted('ROLE_ADMIN')) {
+        //     $form = $this->createForm(UserAdminType::class, $user);
+        // } else {
+        //     $form = $this->createForm(UserType::class, $user);
+        // }
+        $form = $this->createForm(UserType::class, $user);
 
         $form->handleRequest($request);
 
@@ -61,15 +61,16 @@ class UserController extends Controller
     */
     public function editAction(User $user, Request $request)
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        // Vérifier si l'utilisateur connecté a le rôle "ROLE_ADMIN"
-        $authorizationChecker = $this->get('security.authorization_checker');
+        // $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        // // Vérifier si l'utilisateur connecté a le rôle "ROLE_ADMIN"
+        // $authorizationChecker = $this->get('security.authorization_checker');
 
-        if ($authorizationChecker->isGranted('ROLE_ADMIN')) {
-            $form = $this->createForm(UserAdminType::class, $user);
-        } else {
-            $form = $this->createForm(UserType::class, $user);
-        }
+        // if ($authorizationChecker->isGranted('ROLE_ADMIN')) {
+        //     $form = $this->createForm(UserAdminType::class, $user);
+        // } else {
+        //     $form = $this->createForm(UserType::class, $user);
+        // }
+        $form = $this->createForm(UserType::class, $user);
 
         $form->handleRequest($request);
 
