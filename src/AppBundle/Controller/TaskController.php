@@ -3,10 +3,13 @@
 namespace AppBundle\Controller;
 
 use AppBundle\Entity\Task;
+use AppBundle\Entity\User;
 use AppBundle\Form\TaskType;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
 class TaskController extends Controller
 {
@@ -90,15 +93,58 @@ class TaskController extends Controller
     }
 
     /**
-     * @Route("/tasks/{id}/delete", name="task_delete")
-     */
+    * @Route("/tasks/{id}/delete", name="task_delete")
+    */
     public function deleteTaskAction(Task $task)
     {
+        $currentUser = $this->getUser();
+
+        // Vérifier si l'utilisateur actuel a le droit de supprimer la tâche
+        if (!(
+            // L'utilisateur peut supprimer sa propre tâche sauf si elle est associée à l'utilisateur anonyme
+            ($task->getUser() === $currentUser && $currentUser !== null && $currentUser->getUsername() !== 'anonymous') ||
+            // Les utilisateurs avec le rôle 'ROLE_ADMIN' peuvent supprimer toutes les tâches, y compris celles associées à l'utilisateur anonyme
+            ($this->isGranted('ROLE_ADMIN') && $task->getUser() === null)
+        )) {
+            throw new AccessDeniedException("Vous n'avez pas les autorisations nécessaires pour supprimer cette tâche.");
+        }
+    
+        
         $em = $this->getDoctrine()->getManager();
         $em->remove($task);
         $em->flush();
 
         $this->addFlash('success', 'La tâche a bien été supprimée.');
+
+        return $this->redirectToRoute('task_list');
+    }
+
+    /**
+     * @Route("/tasks/assignations", name="assign_user_tache")
+    */
+    public function assignAnonymousUserToTasksAction()
+    {
+        // Vérification que l'utilisateur est "ROLE_ADMIN"
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            throw new AccessDeniedException("Vous n'avez pas les autorisations nécessaires pour effectuer cette opération.");
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $tasksWithoutUser = $em->getRepository(Task::class)->findBy(['user' => null]);
+
+        foreach ($tasksWithoutUser as $task) {
+            // Récupération de l'utilisateur "anonyme"
+            $anonymousUser = $em->getRepository(User::class)->findOneBy(['username' => 'anonyme']);
+
+            if ($anonymousUser) {
+                $task->setUser($anonymousUser);
+                $em->persist($task);
+            }
+        }
+
+        $em->flush();
+
+        $this->addFlash('success', 'Les tâches ont été attribuées à l\'utilisateur "anonyme".');
 
         return $this->redirectToRoute('task_list');
     }
